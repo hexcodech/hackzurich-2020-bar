@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { EaternityService } from './eaternity.service';
+import { EaternityService } from './eaternity/eaternity.service';
 
 @Controller()
 export class AppController {

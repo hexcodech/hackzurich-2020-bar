@@ -35,3 +35,6 @@ lerna-debug.log*
 
 # ENV Config
 .env
+
+# Secret PLZs :P
+plz_text.txt
