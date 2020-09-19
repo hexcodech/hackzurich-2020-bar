@@ -4,7 +4,6 @@ import { UserService } from 'src/user/user.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from "mongoose";
 import { GeographicAreaService } from 'src/geographic-area/geographic-area.service';
-import { User } from 'src/user/user.schema';
 
 @Injectable()
 export class PurchaseService {
