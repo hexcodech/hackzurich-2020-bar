@@ -12,7 +12,7 @@ export interface IngredientDescription {
 
 export interface IngredientInfo {
   "co2-value": number;
-  rating: string;
+  rating: string; /* A-E */
   "food-unit": number;
 }
 
