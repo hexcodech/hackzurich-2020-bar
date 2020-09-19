@@ -3,19 +3,20 @@ import { Purchase } from './purchase.schema';
 import { UserService } from 'src/user/user.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from "mongoose";
-import { GeographicAreaService } from 'src/geographic-area/geographic-area.service';
 
 @Injectable()
 export class PurchaseService {
   constructor(
     @InjectModel(Purchase.name) private purchaseModel: Model<Purchase>,
     private userService: UserService,
-    private geographicAreaService: GeographicAreaService,
   ) {}
 
   async scoreSumForDeviceId(deviceId: string, when: number): Promise<{score: number, count: number}> {
+    const user = await this.userService.findByDeviceId(deviceId);
+    if (!user) {
+      throw new HttpException('No such user', 400);
+    }
     try {
-      const user = await this.userService.findByDeviceId(deviceId);
       const result = await this.purchaseModel
         .aggregate([
           {$match: {_user: (user as any)._id, date: {$gte: new Date(when - parseInt(process.env.SCORE_SUM_DAYS, 10) * 24 * 60 * 60 * 1000), $lt: new Date(when)}}},
@@ -37,7 +38,7 @@ export class PurchaseService {
     }
   }
 
-  async scoreSumForAreas(when: number) {
+  async scoreSumForAreas(when: number): Promise<{plz: number, score: number, count: number}[]> {
     try {
       const result = await this.purchaseModel
         .aggregate([
@@ -52,6 +53,8 @@ export class PurchaseService {
             count: {$sum: 1},
           }},
           {$project: {
+            _id: 0,
+            plz: '$_id',
             score: {$divide: ['$score', '$count']},
             count: 1,
           }}
@@ -61,7 +64,25 @@ export class PurchaseService {
       return result;
     } catch (err) {
       console.error(err);
-      throw new HttpException('Database whoospie', 500);
+      throw new HttpException('Database whoopsie', 500);
+    }
+  }
+
+  async createPurchase(deviceId: string, timestamp: number, score: number): Promise<Purchase> {
+    const user = await this.userService.findByDeviceId(deviceId);
+    if (!user) {
+      throw new HttpException('No such user', 400);
+    }
+    try {
+      const purchase = new this.purchaseModel({
+        _user: (user as any)._id,
+        date: new Date(timestamp),
+        score,
+      });
+      return await purchase.save();
+    } catch (err) {
+      console.error(err);
+      throw new HttpException('Database whoopsie', 500);
     }
   }
 }
