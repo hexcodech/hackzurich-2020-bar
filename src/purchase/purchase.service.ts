@@ -51,12 +51,20 @@ export class PurchaseService {
             _id: '$geographicArea.plz',
             score: {$sum: '$score'},
             count: {$sum: 1},
+            city: {$first: '$geographicArea.city'},
+            canton: {$first: '$geographicArea.canton'},
+            longitude: {$first: '$geographicArea.longitude'},
+            latitude: {$first: '$geographicArea.latitude'},
           }},
           {$project: {
             _id: 0,
             plz: '$_id',
             score: {$divide: ['$score', '$count']},
             count: 1,
+            city: 1,
+            canton: 1,
+            longitude: 1,
+            latitude: 1,
           }}
         ])
         .exec();
