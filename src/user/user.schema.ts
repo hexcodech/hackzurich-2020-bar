@@ -15,7 +15,7 @@ export class User extends Document {
     required: true,
     index: true,
   })
-  geographicArea: Types.ObjectId;
+  _geographicArea: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
