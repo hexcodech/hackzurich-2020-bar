@@ -23,7 +23,7 @@ export class PurchaseController {
   }
 
   @Post('/')
-  async createPurchase(@Body('deviceId') deviceId: string, @Body('date') timestamp: number, @Body('score') score: number): Promise<Purchase> {
-    return await this.purchaseService.createPurchase(deviceId, timestamp, score);
+  async createPurchase(@Body('deviceId') deviceId: string, @Body('date') timestamp: number, @Body('score') score: number, @Body('count') count: number): Promise<Purchase> {
+    return await this.purchaseService.createPurchase(deviceId, timestamp, score, count);
   }
 }

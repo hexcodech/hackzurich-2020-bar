@@ -3,12 +3,14 @@ import { Purchase } from './purchase.schema';
 import { UserService } from 'src/user/user.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from "mongoose";
+import { GeographicAreaService } from 'src/geographic-area/geographic-area.service';
 
 @Injectable()
 export class PurchaseService {
   constructor(
     @InjectModel(Purchase.name) private purchaseModel: Model<Purchase>,
     private userService: UserService,
+    private geographicAreaService: GeographicAreaService,
   ) {}
 
   async scoreSumForDeviceId(deviceId: string, when: number): Promise<{score: number, count: number}> {
@@ -69,6 +71,17 @@ export class PurchaseService {
         ])
         .exec();
 
+      /** We're generating some fake scores for one city in each canton */
+      const allAreas = await this.geographicAreaService.getAllAreas();
+      const cantonSet = new Set();
+      allAreas.forEach((element) => {
+        if (!cantonSet.has(element.canton)) {
+          result.push({...((element as any).toObject()), score: Math.floor(Math.random() * 2000), count: Math.floor(Math.random() * 1000)})
+          cantonSet.add(element.canton);
+        }
+      });
+      /** We don't need this in production, obviously ;) */
+
       return result;
     } catch (err) {
       console.error(err);
@@ -76,18 +89,20 @@ export class PurchaseService {
     }
   }
 
-  async createPurchase(deviceId: string, timestamp: number, score: number): Promise<Purchase> {
+  async createPurchase(deviceId: string, timestamp: number, score: number, count: number): Promise<Purchase> {
     const user = await this.userService.findByDeviceId(deviceId);
     if (!user) {
       throw new HttpException('No such user', 400);
     }
     try {
-      const purchase = new this.purchaseModel({
-        _user: (user as any)._id,
-        date: new Date(timestamp),
-        score,
-      });
-      return await purchase.save();
+      for (let i = 0; i < count; i++) {
+        const purchase = new this.purchaseModel({
+          _user: (user as any)._id,
+          date: new Date(timestamp),
+          score,
+        });
+        return await purchase.save();
+      }
     } catch (err) {
       console.error(err);
       throw new HttpException('Database whoopsie', 500);
